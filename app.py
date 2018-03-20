@@ -114,6 +114,8 @@ root.configure(background='black')
 
 root.bind('<Left>', prev_event)
 root.bind('<Right>', next_event)
+root.bind('<Prior>', prev_event)
+root.bind('<Next>', next_event)
 root.bind('f', toggle_fs)
 root.bind('<Up>', up_font)
 root.bind('<Down>', down_font)

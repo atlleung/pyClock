@@ -1,8 +1,11 @@
 # PyClock
 
-a worship timer.
+an event timer.
 
-run `python app.py` and it will prompt the user to enter file name of the schedule. Ensure `.csv` file is in the same folder and enter filename without `.csv` extension.
+
+To run, navigate from terminal/command line to directory, run `python app.py`  and it will prompt the user to enter file name of the schedule. Ensure `.csv` file is in the same folder and enter filename without `.csv` extension.
+
+Alternatively, on Windows, run `run.bat` and it will start the app
 
 ### Dependencies
 
