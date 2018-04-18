@@ -15,6 +15,26 @@ import datetime
 import time
 import pandas as pd
 import sys
+import requests
+import json
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
+
+# use creds to create a client to interact with the Google Drive API
+
+print("setting up google drive")
+scope = ['https://spreadsheets.google.com/feeds',
+         'https://www.googleapis.com/auth/drive']
+creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
+
+print("logging in...")
+client = gspread.authorize(creds)
+
+# Find a workbook by name and open the first sheet
+# Make sure you use the right name here.
+print("loading sheet...")
+sheet = client.open("GCGC Worship Tracker").sheet1
 
 
 print("Welcome to the event timer app!\n\n")
@@ -34,6 +54,8 @@ if sys.version_info.major == 2:
 else:
     import tkinter as tk
     name = input("Please enter file name: ")
+
+urls = json.loads(open('endpoints.json').read()) # API endpoints
 
 # fs = False
 df = pd.read_csv(name + ".csv")
@@ -68,30 +90,50 @@ def title_label(label):
   count()
 
 def time_label(label):
-  def count():
-    global counter
-    t_event = datetime.datetime(y,m,d,df["hour"][counter], df["minute"][counter])
-    delta = t_event - datetime.datetime.now()
+    def count():
+        global counter
+        t_event = datetime.datetime(y,m,d,df["hour"][counter], df["minute"][counter])
+        delta = t_event - datetime.datetime.now()
 
-    if int(delta.days) <0:
-        label.config(fg = "red")
-        dm, ds= divmod(abs(int(delta.seconds-86400)), 60)
-        if ds <10:
-            ds = str(0)+str(ds)
-        label.config(text=str(dm) + ":" + str(ds))
-    else:
-        label.config(fg = "green")
-        dm, ds= divmod(abs(int(delta.seconds)), 60)
-        if dm > 2:
-            label.config(text=str(dm))
-        elif ds < 10:
-            ds = str(0)+str(ds)
+        if int(delta.days) <0:
+            label.config(fg = "red")
+            dm, ds= divmod(abs(int(delta.seconds-86400)), 60)
+            if ds <10:
+                ds = str(0)+str(ds)
             label.config(text=str(dm) + ":" + str(ds))
         else:
-            label.config(text=str(dm) + ":" + str(ds))
+            label.config(fg = "green")
+            dm, ds= divmod(abs(int(delta.seconds)), 60)
+            if dm > 2:
+                label.config(text=str(dm))
+            elif ds < 10:
+                ds = str(0)+str(ds)
+                label.config(text=str(dm) + ":" + str(ds))
+            else:
+                label.config(text=str(dm) + ":" + str(ds))
 
-    label.after(100, count)
-  count()
+        label.after(100, count)
+
+    def check():
+        global counter
+        global df
+        global sheet
+        chk_val = sheet.acell('A1').value
+        # print(chk_val, counter)
+
+        if int(chk_val) == 1:
+            if counter<(len(df) -1):
+                counter += 1
+            sheet.update_acell('A1', 0)
+        elif int(chk_val) == -1:
+            if counter > 0:
+                counter-=1
+            sheet.update_acell('A1', 0)
+
+        label.after(5000, check)
+
+    check()
+    count()
 
 def next_event(event):
     global counter
@@ -193,6 +235,7 @@ print(width,height)
 root.title("countdown timer")
 root.geometry('%ix%i' % (width, height))
 root.configure(background='black')
+# Comment out below line for non Windows
 root.overrideredirect(True)
 #
 # c = tk.Canvas(root)
@@ -230,6 +273,7 @@ time_label(label_time)
 control = tk.Tk()
 control.title("Timer Controller")
 control.geometry('%ix%i' % (400, 200))
+# Comment out below line for non Windows
 control.overrideredirect(True)
 control_time = tk.Label(control, fg="green",font ="Helvetica 30")
 control_label = tk.Label(control, fg="black",font ="Helvetica 30")
